@@ -18,8 +18,8 @@ function WebSocketServer(sockets, matches) {
     console.log(`--> ${identity.id} connected!`);
     sockets[identity.id] = socket;
 
-    socket.on('message', async msgBytes => {
-      const msg = msgBytes.toString();
+    socket.on('message', async (bytes) => {
+      const msg = bytes.toString();
       if (msg.startsWith('move')) {
         const move = msg.substring(5, 9);
         console.log(`>> ${identity.id} moving ${move}`);
@@ -60,11 +60,10 @@ function WebSocketServer(sockets, matches) {
           
           match.state = res.newFen;
           sockets[opponent].send(`move ${move}`);
+
+          match.toMove = !match.toMove;
         }
 
-      } else {
-        console.log(`>> received ${msg} from ${identity.id}`)
-        socket.send('mersi');
       }
     });
 
