@@ -52,11 +52,11 @@ function WebSocketServer(sockets, matches) {
             return socket.send('bad move');
 
           if (res1.result !== null) {
-            const result = `result ${res1.result.toLowerCase()}`;
+            const result = `result ${res1.result.replace('_', ' ').toLowerCase()}`;
             socket.send(result);
 
             await endMatch({ id: match.matchID, result: res1.result })
-            return;
+            return socket.close();
           }
 
           const res2 = await suggestMove({ fen: res1.newFen });
@@ -64,12 +64,11 @@ function WebSocketServer(sockets, matches) {
           socket.send(`move ${res2.move}`);
 
           if (res2.result !== null) {
-            const result = `result ${res2.result.toLowerCase()}`;
-            console.log(result);
+            const result = `result ${res2.result.replace('_', ' ').toLowerCase()}`;
             socket.send(result);
 
-            const res21 = await endMatch({ id: match.matchID, result: res2.result })
-            console.log(res21);
+            await endMatch({ id: match.matchID, result: res2.result })
+            return socket.close();
           }
 
         } else {
@@ -79,6 +78,17 @@ function WebSocketServer(sockets, matches) {
           
           match.state = res.newFen;
           sockets[opponent].send(`move ${move}`);
+
+          if (res.result !== null) {
+            const result = `result ${res.result.replace('_', ' ').toLowerCase()}`;
+            socket.send(result);
+            sockets[opponent].send(result);
+
+            await endMatch({ id: match.matchID, result: res.result })
+            socket.close();
+            sockets[opponent].close();
+            return;
+          }
 
           match.toMove = !match.toMove;
         }
