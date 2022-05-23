@@ -2,6 +2,7 @@ import WebSocket from 'ws';
 import jwt from './jwt';
 
 import { validateMove, suggestMove } from './services/gameEngineService';
+import { updateMatch, endMatch } from './services/matchmakingService';
 
 function WebSocketServer(sockets, matches) {
   const wss = new WebSocket.Server({ port: 8080 });
@@ -53,6 +54,16 @@ function WebSocketServer(sockets, matches) {
           const res2 = await suggestMove({ fen: res1.newFen });
           match.state = res2.newFen;
           socket.send(`move ${res2.move}`);
+
+          if (res2.result !== null) {
+            const result = `result ${res2.result.toLowerCase()}`;
+            socket.send(result);
+            sockets[opponent].send(result);
+
+            const res21 = await endMatch({ id: match.matchID, result: res2.result })
+            console.log(res21);
+          }
+
         } else {
           const res = await validateMove({ fen: match.state, move });
           if (!res.success)

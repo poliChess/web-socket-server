@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 
-const delay = (milis) => new Promise(resolve => setTimeout(resolve, milis));
+const delay = (milis: number) => new Promise(resolve => setTimeout(resolve, milis));
 
 const newMatchInfo = (matchID: string, player1ID: string, player2ID: string) => ({
   matchID,
@@ -11,7 +11,7 @@ const newMatchInfo = (matchID: string, player1ID: string, player2ID: string) => 
   state: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 });
 
-function ControllerEndpoint(sockets, matches) {
+function ControllerEndpoint(sockets: any, matches: any) {
   const app = express();
   app.use(bodyParser.json());
 
