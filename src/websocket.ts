@@ -55,6 +55,7 @@ function WebSocketServer(sockets, matches) {
             const result = `result ${res1.result.replace('_', ' ').toLowerCase()}`;
             socket.send(result);
 
+            delete matches[identity.id];
             await endMatch({ id: match.matchID, result: res1.result })
             return socket.close();
           }
@@ -67,6 +68,7 @@ function WebSocketServer(sockets, matches) {
             const result = `result ${res2.result.replace('_', ' ').toLowerCase()}`;
             socket.send(result);
 
+            delete matches[identity.id];
             await endMatch({ id: match.matchID, result: res2.result })
             return socket.close();
           }
@@ -84,6 +86,8 @@ function WebSocketServer(sockets, matches) {
             socket.send(result);
             sockets[opponent].send(result);
 
+            delete matches[identity.id];
+            delete matches[opponent];
             await endMatch({ id: match.matchID, result: res.result })
             socket.close();
             sockets[opponent].close();
