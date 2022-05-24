@@ -51,6 +51,8 @@ function WebSocketServer(sockets, matches) {
           if (!res1.success)
             return socket.send('bad move');
 
+          // TODO: send move to matchmaking
+
           if (res1.result !== null) {
             const result = `result ${res1.result.replace('_', ' ').toLowerCase()}`;
             socket.send(result);
@@ -63,6 +65,8 @@ function WebSocketServer(sockets, matches) {
           const res2 = await suggestMove({ fen: res1.newFen });
           match.state = res2.newFen;
           socket.send(`move ${res2.move}`);
+
+          // TODO: send move to matchmaking
 
           if (res2.result !== null) {
             const result = `result ${res2.result.replace('_', ' ').toLowerCase()}`;
@@ -77,6 +81,8 @@ function WebSocketServer(sockets, matches) {
           const res = await validateMove({ fen: match.state, move });
           if (!res.success)
             return socket.send('bad move');
+
+          // TODO: send move to matchmaking
           
           match.state = res.newFen;
           sockets[opponent].send(`move ${move}`);
