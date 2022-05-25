@@ -48,7 +48,7 @@ function ControllerEndpoint(sockets: any, matches: any) {
     sockets[player1ID].send(`start first vs ${player2.username}`);
     if (player2ID != 'computer') {
       matches[player2ID] = match;
-      sockets[player2ID].send(`start second vs ${player2.username}`);
+      sockets[player2ID].send(`start second vs ${player1.username}`);
     }
 
     return res.send('ok');
