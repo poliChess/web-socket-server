@@ -1,3 +1,4 @@
+import 'isomorphic-unfetch';
 import WebSocketServer from './websocket';
 import ControllerEndpoint from './controller';
 

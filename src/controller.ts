@@ -1,6 +1,8 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 
+import { getUser } from './services/userService';
+
 const delay = (milis: number) => new Promise(resolve => setTimeout(resolve, milis));
 
 const newMatchInfo = (matchID: string, player1ID: string, player2ID: string) => ({
@@ -23,10 +25,11 @@ function ControllerEndpoint(sockets: any, matches: any) {
     const matchID = req.body.matchID;
     const player1ID = req.body.player1ID;
     const player2ID = req.body.player2ID;
-    const player1Username = req.body.player1Username;
-    const player2Username = req.body.player2Username;
 
-    if (!matchID || !player1ID || !player2ID || !player1Username || !player2Username)
+    const player1 = await getUser(player1ID);
+    const player2 = await getUser(player2ID);
+
+    if (!matchID || !player1ID || !player2ID || !player1 || !player2)
       return res.status(400).send('bad request');
 
     while (!sockets[player1ID])
@@ -42,10 +45,10 @@ function ControllerEndpoint(sockets: any, matches: any) {
     console.log('starting game: ' + match);
 
     matches[player1ID] = match;
-    sockets[player1ID].send(`start first vs ${player2Username}`);
+    sockets[player1ID].send(`start first vs ${player2.username}`);
     if (player2ID != 'computer') {
       matches[player2ID] = match;
-      sockets[player2ID].send(`start second vs ${player1Username}`);
+      sockets[player2ID].send(`start second vs ${player2.username}`);
     }
 
     return res.send('ok');

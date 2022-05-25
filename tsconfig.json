@@ -29,7 +29,8 @@
 		"downlevelIteration": true,
 		"declaration": true,
 
-		"pretty": true
+		"pretty": true,
+        "skipLibCheck": true
 	},
 	"include": [
 		"typings/**/*",
