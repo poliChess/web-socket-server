@@ -2,7 +2,7 @@ import WebSocket from 'ws';
 import jwt from './jwt';
 
 import { validateMove, suggestMove } from './services/gameEngineService';
-import { updateMatch, endMatch } from './services/matchmakingService';
+import { updateMatch, endMatch, leaveQueue } from './services/matchmakingService';
 
 function WebSocketServer(sockets, matches) {
   const wss = new WebSocket.Server({ port: 8080 });
@@ -22,14 +22,11 @@ function WebSocketServer(sockets, matches) {
     socket.on('message', async (bytes) => {
       const msg = bytes.toString();
       if (msg.startsWith('move')) {
-        const move = msg.substring(5, 9);
-        console.log(`>> ${identity.id} moving ${move}`);
-
-        const match = matches[identity.id];
-
+        const move   = msg.substring(5, 9);
+        const match  = matches[identity.id];
         const player = identity.id;
+
         let opponent = null;
-        
         if (match.player1ID === player) {
           opponent = match.player2ID;
           if (match.toMove)
@@ -110,8 +107,35 @@ function WebSocketServer(sockets, matches) {
       console.log(`==> ${identity.id} disconnected!`);
       delete sockets[identity.id];
 
-      // TODO: invalidate queue if game not started
-      // TODO: invalidate match if started
+      const match = matches[identity.id];
+
+      if (!match)
+        return leaveQueue({ playerID: identity.id });
+
+      if (match.player2ID === 'computer') {
+        delete matches[identity.id];
+        return endMatch({ id: match.matchID, result: 'WINNER_BLACK' });
+      }
+
+      let opponent: string, winner: string;
+      if (match.player1ID === identity.id) {
+        opponent = match.player2ID;
+        winner = 'WINNER_BLACK';
+      } else {
+        opponent = match.player1ID;
+        winner = 'WINNER_WHITE';
+      }
+
+      endMatch({ id: match.matchID, result: winner });
+
+      const result = `result ${winner.replace('_', ' ').toLowerCase()}`;
+
+      sockets[opponent].send(result)
+      sockets[opponent].close();
+      delete sockets[opponent];
+
+      delete matches[identity.id];
+      delete matches[opponent];
     });
   });
 }

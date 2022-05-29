@@ -15,4 +15,9 @@ async function endMatch(args: { id: string, result: string }) {
   return res.data;
 }
 
-export { updateMatch, endMatch };
+async function leaveQueue(args: { playerID: string }) {
+  const res = await axios.post(serviceAddr + '/queue/leave', args);
+  return res.data;
+}
+
+export { updateMatch, endMatch, leaveQueue };
