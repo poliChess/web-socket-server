@@ -4,7 +4,7 @@ import jwt from './jwt';
 import { validateMove, suggestMove } from './services/gameEngineService';
 import { updateMatch, endMatch, leaveQueue } from './services/matchmakingService';
 
-function WebSocketServer(sockets, matches) {
+function WebSocketServer(sockets: any, matches: any) {
   const wss = new WebSocket.Server({ port: 8080 });
 
   wss.on('connection', (socket, req) => {
@@ -43,12 +43,13 @@ function WebSocketServer(sockets, matches) {
         if (!opponent) 
           return socket.close();
 
+        // -------------------------- VS Computer ----------------------------- //
         if (opponent === 'computer') {
           const res1 = await validateMove({ fen: match.state, move });
           if (!res1.success)
             return socket.send('bad move');
 
-          // TODO: send move to matchmaking
+          updateMatch({ id: match.matchID, state: res1.newFen, move });
 
           if (res1.result !== null) {
             const result = `result ${res1.result.replace('_', ' ').toLowerCase()}`;
@@ -63,7 +64,7 @@ function WebSocketServer(sockets, matches) {
           match.state = res2.newFen;
           socket.send(`move ${res2.move}`);
 
-          // TODO: send move to matchmaking
+          updateMatch({ id: match.matchID, state: res2.newFen, move: res2.move });
 
           if (res2.result !== null) {
             const result = `result ${res2.result.replace('_', ' ').toLowerCase()}`;
@@ -74,32 +75,33 @@ function WebSocketServer(sockets, matches) {
             return socket.close();
           }
 
+        // --------------------------- VS Player ------------------------------ //
         } else {
           const res = await validateMove({ fen: match.state, move });
           if (!res.success)
             return socket.send('bad move');
 
-          // TODO: send move to matchmaking
+          updateMatch({ id: match.matchID, state: res.newFen, move });
           
           match.state = res.newFen;
           sockets[opponent].send(`move ${move}`);
+
+          match.toMove = !match.toMove;
 
           if (res.result !== null) {
             const result = `result ${res.result.replace('_', ' ').toLowerCase()}`;
             socket.send(result);
             sockets[opponent].send(result);
 
-            delete matches[identity.id];
-            delete matches[opponent];
-            await endMatch({ id: match.matchID, result: res.result })
+            endMatch({ id: match.matchID, result: res.result })
+
             socket.close();
             sockets[opponent].close();
+
+            // TODO: update player ratings and stats
             return;
           }
-
-          match.toMove = !match.toMove;
         }
-
       }
     });
 
