@@ -30,6 +30,10 @@ const queries = {
     }`
 }
 
+const mutations = {
+  updateUsers: ``
+}
+
 async function getUser(id: string) {
   if (id === 'computer')
     return { username: 'computer' }
@@ -64,4 +68,25 @@ async function findUser(username: string) {
   }
 }
 
-export { getUser, findUser }
+async function updateUsers(args: { winnerId: string, loserId: string, draw: boolean }) {
+  const winner = await getUser(args.winnerId);
+  const loser  = await getUser(args.loserId);
+
+  console.log('WINNER: ' + winner.rating);
+  console.log('LOSER: ' + loser.rating);
+
+  const newWinnerRating = winner.rating + 20 * (1 + (loser.rating - winner.rating) / 50);
+  const newLoserRating  = loser.rating  - 20 * (1 + (loser.rating - winner.rating) / 50);
+
+  console.log('WINNER: ' + newWinnerRating);
+  console.log('LOSER: ' + newLoserRating);
+
+  return;
+
+  const res = await client.mutation(
+    mutations.updateUsers,
+    {}
+  ).toPromise();
+}
+
+export { getUser, findUser, updateUsers }

@@ -3,6 +3,7 @@ import jwt from './jwt';
 
 import { validateMove, suggestMove } from './services/gameEngineService';
 import { updateMatch, endMatch, leaveQueue } from './services/matchmakingService';
+import { updateUsers } from './services/userService';
 
 function WebSocketServer(sockets: any, matches: any) {
   const wss = new WebSocket.Server({ port: 8080 });
@@ -95,10 +96,27 @@ function WebSocketServer(sockets: any, matches: any) {
 
             endMatch({ id: match.matchID, result: res.result })
 
+            let winnerId: string, loserId: string, draw: boolean;
+            if (res.result === 'DRAW' || res.result === 'STALEMATE') {
+              winnerId = match.player1ID;
+              loserId = match.player2ID;
+              draw = true;
+            } else if (res.result === 'WINNER_WHITE') {
+              winnerId = match.player1ID;
+              loserId = match.player2ID;
+              draw = false;
+            } else {
+              winnerId = match.player2ID;
+              loserId = match.player1ID;
+              draw = false;
+            }
+            updateUsers({ winnerId, loserId, draw });
+
+            delete matches[identity.id];
+            delete matches[opponent];
+
             socket.close();
             sockets[opponent].close();
-
-            // TODO: update player ratings and stats
             return;
           }
         }
@@ -123,21 +141,21 @@ function WebSocketServer(sockets: any, matches: any) {
       if (match.player1ID === identity.id) {
         opponent = match.player2ID;
         winner = 'WINNER_BLACK';
+        updateUsers({ winnerId: opponent, loserId: identity.id, draw: false });
       } else {
         opponent = match.player1ID;
         winner = 'WINNER_WHITE';
+        updateUsers({ winnerId: identity.id, loserId: opponent, draw: false });
       }
 
       endMatch({ id: match.matchID, result: winner });
 
-      const result = `result ${winner.replace('_', ' ').toLowerCase()}`;
-
-      sockets[opponent].send(result)
-      sockets[opponent].close();
-      delete sockets[opponent];
-
       delete matches[identity.id];
       delete matches[opponent];
+
+      const result = `result ${winner.replace('_', ' ').toLowerCase()}`;
+      sockets[opponent].send(result)
+      sockets[opponent].close();
     });
   });
 }
