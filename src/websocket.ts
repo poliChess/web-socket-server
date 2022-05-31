@@ -96,21 +96,10 @@ function WebSocketServer(sockets: any, matches: any) {
 
             endMatch({ id: match.matchID, result: res.result })
 
-            let winnerId: string, loserId: string, draw: boolean;
-            if (res.result === 'DRAW' || res.result === 'STALEMATE') {
-              winnerId = match.player1ID;
-              loserId = match.player2ID;
-              draw = true;
-            } else if (res.result === 'WINNER_WHITE') {
-              winnerId = match.player1ID;
-              loserId = match.player2ID;
-              draw = false;
-            } else {
-              winnerId = match.player2ID;
-              loserId = match.player1ID;
-              draw = false;
-            }
-            updateUsers({ winnerId, loserId, draw });
+            if (res.result === 'WINNER_WHITE')
+              updateUsers({ winnerId: match.player1ID, loserId: match.player2ID });
+            if (res.result === 'WINNER_BLACK')
+              updateUsers({ winnerId: match.player2ID, loserId: match.player1ID });
 
             delete matches[identity.id];
             delete matches[opponent];
@@ -141,11 +130,11 @@ function WebSocketServer(sockets: any, matches: any) {
       if (match.player1ID === identity.id) {
         opponent = match.player2ID;
         winner = 'WINNER_BLACK';
-        updateUsers({ winnerId: opponent, loserId: identity.id, draw: false });
+        updateUsers({ winnerId: match.player2ID, loserId: match.player1ID });
       } else {
         opponent = match.player1ID;
         winner = 'WINNER_WHITE';
-        updateUsers({ winnerId: identity.id, loserId: opponent, draw: false });
+        updateUsers({ winnerId: match.player1ID, loserId: match.player2ID });
       }
 
       endMatch({ id: match.matchID, result: winner });

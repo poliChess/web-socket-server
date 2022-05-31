@@ -31,7 +31,39 @@ const queries = {
 }
 
 const mutations = {
-  updateUsers: ``
+  updateUsers: 
+    `mutation(
+      $winnerId: ID!, $winnerPlayed: Int!, $winnerWon: Int!, $winnerRating: Int!,
+      $loserId: ID!, $loserPlayed: Int!, $loserRating: Int!,
+    ) {
+      winner: updateUser(id: $winnerId, playedGames: $winnerPlayed,
+                         wonGames: $winnerWon, rating: $winnerRating) {
+        success
+        message
+        user {
+          id
+          mail
+          username
+          playedGames
+          wonGames
+          rating
+          lastLogin
+        }
+      }
+      loser: updateUser(id: $loserId, playedGames: $loserPlayed, rating: $loserRating) {
+        success
+        message
+        user {
+          id
+          mail
+          username
+          playedGames
+          wonGames
+          rating
+          lastLogin  
+        }
+      }
+    }`
 }
 
 async function getUser(id: string) {
@@ -68,25 +100,33 @@ async function findUser(username: string) {
   }
 }
 
-async function updateUsers(args: { winnerId: string, loserId: string, draw: boolean }) {
+async function updateUsers(args: { winnerId: string, loserId: string }) {
   const winner = await getUser(args.winnerId);
   const loser  = await getUser(args.loserId);
 
-  console.log('WINNER: ' + winner.rating);
-  console.log('LOSER: ' + loser.rating);
-
-  const newWinnerRating = winner.rating + 20 * (1 + (loser.rating - winner.rating) / 50);
-  const newLoserRating  = loser.rating  - 20 * (1 + (loser.rating - winner.rating) / 50);
-
-  console.log('WINNER: ' + newWinnerRating);
-  console.log('LOSER: ' + newLoserRating);
-
-  return;
+  const change = 20 * (1 + (loser.rating - winner.rating) / 200);
 
   const res = await client.mutation(
     mutations.updateUsers,
-    {}
+    {
+      winnerId: args.winnerId, 
+      winnerPlayed: winner.playedGames + 1, 
+      winnerWon: winner.wonGames + 1,
+      winnerRating: Math.round(winner.rating + change),
+
+      loserId: args.loserId,
+      loserPlayed: loser.playedGames + 1,
+      loserRating: Math.round(loser.rating - change)
+    }
   ).toPromise();
+
+  const redis = await getClient();
+
+  if (res.data.winner && res.data.winner.success)
+    redis.set(args.winnerId, JSON.stringify(res.data.winner.user));
+
+  if (res.data.loser && res.data.loser.success)
+    redis.set(args.loserId, JSON.stringify(res.data.loser.user));
 }
 
 export { getUser, findUser, updateUsers }
