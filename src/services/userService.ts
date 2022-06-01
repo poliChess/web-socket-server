@@ -11,6 +11,7 @@ const queries = {
         id
         mail
         username
+        avatar
         playedGames
         wonGames
         rating
@@ -22,6 +23,7 @@ const queries = {
         id
         mail
         username
+        avatar
         playedGames
         wonGames
         rating
@@ -44,6 +46,7 @@ const mutations = {
           id
           mail
           username
+          avatar
           playedGames
           wonGames
           rating
@@ -57,6 +60,7 @@ const mutations = {
           id
           mail
           username
+          avatar
           playedGames
           wonGames
           rating
