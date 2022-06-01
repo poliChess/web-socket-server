@@ -10,4 +10,4 @@ EXPOSE 8080
 
 RUN npm install --omit=dev
 
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "prod"]
