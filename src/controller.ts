@@ -42,8 +42,6 @@ function ControllerEndpoint(sockets: any, matches: any) {
 
     const match = newMatchInfo(matchID, player1ID, player2ID);
 
-    console.log('starting game: ' + match);
-
     matches[player1ID] = match;
     sockets[player1ID].send(`start first vs ${player2.username}`);
     if (player2ID != 'computer') {

@@ -5,6 +5,36 @@ import { validateMove, suggestMove } from './services/gameEngineService';
 import { updateMatch, endMatch, leaveQueue } from './services/matchmakingService';
 import { updateUsers } from './services/userService';
 
+async function verifyAndRegisterMove(args: { matchID: string, state: string, move: string }) {
+  const res1 = await validateMove({ fen: args.state, move: args.move });
+  if (!res1.success)
+    return res1;
+
+  const res2 = await updateMatch({ id: args.matchID, state: res1.newFen, move: args.move });
+  if (!res2.success)
+    return res2;
+
+  return {
+    ...res1,
+    result: res1.result || res2.result
+  }
+}
+
+async function suggestAndRegisterMove(args: { matchID: string, state: string }) {
+  const res1 = await suggestMove({ fen: args.state });
+  if (!res1.success)
+    return res1;
+
+  const res2 = await updateMatch({ id: args.matchID, state: res1.newFen, move: res1.move });
+  if (!res2.success)
+    return res2;
+
+  return {
+    ...res1,
+    result: res1.result || res2.result
+  }
+}
+
 function WebSocketServer(sockets: any, matches: any) {
   const wss = new WebSocket.Server({ port: 8080 });
 
@@ -46,43 +76,37 @@ function WebSocketServer(sockets: any, matches: any) {
 
         // -------------------------- VS Computer ----------------------------- //
         if (opponent === 'computer') {
-          const res1 = await validateMove({ fen: match.state, move });
+          const res1 = await verifyAndRegisterMove({ matchID: match.matchID, state: match.state, move});
           if (!res1.success)
             return socket.send('bad move');
-
-          updateMatch({ id: match.matchID, state: res1.newFen, move });
 
           if (res1.result !== null) {
             const result = `result ${res1.result.replace('_', ' ').toLowerCase()}`;
             socket.send(result);
 
             delete matches[identity.id];
-            await endMatch({ id: match.matchID, result: res1.result })
+            endMatch({ id: match.matchID, result: res1.result })
             return socket.close();
           }
 
-          const res2 = await suggestMove({ fen: res1.newFen });
+          const res2 = await suggestAndRegisterMove({ matchID: match.matchID, state: res1.newFen });
           match.state = res2.newFen;
           socket.send(`move ${res2.move}`);
-
-          updateMatch({ id: match.matchID, state: res2.newFen, move: res2.move });
 
           if (res2.result !== null) {
             const result = `result ${res2.result.replace('_', ' ').toLowerCase()}`;
             socket.send(result);
 
             delete matches[identity.id];
-            await endMatch({ id: match.matchID, result: res2.result })
+            endMatch({ id: match.matchID, result: res2.result })
             return socket.close();
           }
 
         // --------------------------- VS Player ------------------------------ //
         } else {
-          const res = await validateMove({ fen: match.state, move });
+          const res = await verifyAndRegisterMove({ matchID: match.matchID, state: match.state, move});
           if (!res.success)
             return socket.send('bad move');
-
-          updateMatch({ id: match.matchID, state: res.newFen, move });
           
           match.state = res.newFen;
           sockets[opponent].send(`move ${move}`);
