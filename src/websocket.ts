@@ -47,7 +47,6 @@ function WebSocketServer(sockets: any, matches: any) {
     if (!identity)
       return socket.close();
 
-    console.log(`--> ${identity.id} connected!`);
     sockets[identity.id] = socket;
 
     socket.on('message', async (bytes) => {
@@ -137,7 +136,6 @@ function WebSocketServer(sockets: any, matches: any) {
     });
 
     socket.on('close', async _ => {
-      console.log(`==> ${identity.id} disconnected!`);
       delete sockets[identity.id];
 
       const match = matches[identity.id];
