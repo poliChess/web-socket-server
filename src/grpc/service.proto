@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package api;
+
+message Status {
+	bool success = 1;
+	string message = 2;
+}
+
+message Service {
+	string serviceName = 1;
+	string serviceAddr = 2;
+}
+
+message GetRequest {
+	string serviceName = 1;
+}
+
+message GetResponse {
+	Status status = 1;
+	Service service = 2;
+}
+
+service ServiceDiscovery {
+	rpc Register(Service) returns (Status);
+	rpc Get(GetRequest) returns (GetResponse);
+}

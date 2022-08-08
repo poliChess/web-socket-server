@@ -33,7 +33,7 @@ const queries = {
 }
 
 const mutations = {
-  updateUsers: 
+  updateUsers:
     `mutation(
       $winnerId: ID!, $winnerPlayed: Int!, $winnerWon: Int!, $winnerRating: Int!,
       $loserId: ID!, $loserPlayed: Int!, $loserRating: Int!,
@@ -64,7 +64,7 @@ const mutations = {
           playedGames
           wonGames
           rating
-          lastLogin  
+          lastLogin
         }
       }
     }`
@@ -81,7 +81,7 @@ async function getUser(id: string) {
     return JSON.parse(cached);
 
   const res = await client.query(queries.user, { id }).toPromise();
-  
+
   redis.set(id, JSON.stringify(res.data.user));
   return res.data.user;
 }
@@ -106,15 +106,15 @@ async function findUser(username: string) {
 
 async function updateUsers(args: { winnerId: string, loserId: string }) {
   const winner = await getUser(args.winnerId);
-  const loser  = await getUser(args.loserId);
+  const loser = await getUser(args.loserId);
 
   const change = 20 * (1 + (loser.rating - winner.rating) / 200);
 
   const res = await client.mutation(
     mutations.updateUsers,
     {
-      winnerId: args.winnerId, 
-      winnerPlayed: winner.playedGames + 1, 
+      winnerId: args.winnerId,
+      winnerPlayed: winner.playedGames + 1,
       winnerWon: winner.wonGames + 1,
       winnerRating: Math.round(winner.rating + change),
 

@@ -1,14 +1,30 @@
 import axios from 'axios';
 
-const serviceAddr = 'http://game-engine-service:3000/engine';
+import discovery from '../grpc/discovery';
+
+let addr: string | null = null;
+const serviceAddr = async () => {
+  while (!addr) {
+    const res = await discovery.get('game-engine-service');
+
+    if (res.status.success) {
+      addr = res.service.serviceAddr;
+    } else {
+      console.warn(res.status.message);
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+
+  return addr;
+};
 
 async function validateMove(args: { fen: string, move: string }) {
-  const res = await axios.post(serviceAddr + '/move/validate', args);
+  const res = await axios.post(`http://${await serviceAddr()}/move/validate`, args);
   return res.data;
 };
 
 async function suggestMove(args: { fen: string }) {
-  const res = await axios.post(serviceAddr + '/move/suggest', args);
+  const res = await axios.post(`http://${await serviceAddr()}/move/suggest`, args);
   return res.data;
 };
 

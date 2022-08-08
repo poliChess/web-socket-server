@@ -52,8 +52,8 @@ function WebSocketServer(sockets: any, matches: any) {
     socket.on('message', async (bytes) => {
       const msg = bytes.toString();
       if (msg.startsWith('move')) {
-        const move   = msg.substring(5, 9);
-        const match  = matches[identity.id];
+        const move = msg.substring(5, 9);
+        const match = matches[identity.id];
         const player = identity.id;
 
         let opponent = null;
@@ -70,12 +70,12 @@ function WebSocketServer(sockets: any, matches: any) {
         }
 
         // this is bad
-        if (!opponent) 
+        if (!opponent)
           return socket.close();
 
         // -------------------------- VS Computer ----------------------------- //
         if (opponent === 'computer') {
-          const res1 = await verifyAndRegisterMove({ matchID: match.matchID, state: match.state, move});
+          const res1 = await verifyAndRegisterMove({ matchID: match.matchID, state: match.state, move });
           if (!res1.success)
             return socket.send('bad move');
 
@@ -101,12 +101,12 @@ function WebSocketServer(sockets: any, matches: any) {
             return socket.close();
           }
 
-        // --------------------------- VS Player ------------------------------ //
+          // --------------------------- VS Player ------------------------------ //
         } else {
-          const res = await verifyAndRegisterMove({ matchID: match.matchID, state: match.state, move});
+          const res = await verifyAndRegisterMove({ matchID: match.matchID, state: match.state, move });
           if (!res.success)
             return socket.send('bad move');
-          
+
           match.state = res.newFen;
           sockets[opponent].send(`move ${move}`);
 
