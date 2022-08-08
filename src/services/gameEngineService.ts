@@ -19,12 +19,12 @@ const serviceAddr = async () => {
 };
 
 async function validateMove(args: { fen: string, move: string }) {
-  const res = await axios.post(`http://${await serviceAddr()}/move/validate`, args);
+  const res = await axios.post(`http://${await serviceAddr()}/engine/move/validate`, args);
   return res.data;
 };
 
 async function suggestMove(args: { fen: string }) {
-  const res = await axios.post(`http://${await serviceAddr()}/move/suggest`, args);
+  const res = await axios.post(`http://${await serviceAddr()}/engine/move/suggest`, args);
   return res.data;
 };
 
